@@ -115,7 +115,7 @@ app.post('/login',(req:Request<any,RequestBody | RequestError<VerifyErrors>,Pick
 
 })
 
-app.post('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,RequestBody>,res:Response) => {
+app.get('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,any>,res:Response) => {
 
      
      
