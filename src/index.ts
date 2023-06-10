@@ -1,6 +1,7 @@
 
 import express, { NextFunction, Request, Response } from "express";
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt, { VerifyErrors } from 'jsonwebtoken';
 
@@ -8,12 +9,12 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(cors({origin:'*'}));
 app.use('*',function(req, res, next) { //allow cross origin requests
 
    
     
-    res.setHeader('Access-Control-Allow-Origin', `http://localhost:5173/${req.baseUrl}`);
+    res.setHeader('Access-Control-Allow-Origin', `http://localhost:5173${req.baseUrl}`);
 
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
