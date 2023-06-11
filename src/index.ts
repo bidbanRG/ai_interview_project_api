@@ -103,7 +103,7 @@ app.post('/signup',(req:Request<any,Pick<Tokens,'accessToken'> | RequestError<'m
          maxAge:1000 * 45
       })
 
-       res.status(200).end();
+      return res.status(200).json({accessToken});
 
 })
 
@@ -153,7 +153,7 @@ app.get('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,
 
 })
 
-app.listen(3000,() => {
+app.listen(5000,() => {
    console.log('listening at PORT 3000');
 })
 
