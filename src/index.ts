@@ -56,9 +56,9 @@ const VerifyRefreshToken = (req:Request<unknown,unknown,RequestBody>,
        
 
         const cookies = req.cookies;  
-        if(!cookies?.jwt) return res.json({err:'No Cookie Found'});
+        if(!cookies?.jwt_refresh) return res.json({err:'No Cookie Found'});
         
-       jwt.verify(cookies.jwt as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
+       jwt.verify(cookies.jwt_refresh as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
              
              if(err) return res.status(401).json({err});
              
@@ -94,36 +94,38 @@ app.post('/signup',(req:Request<any,Pick<Tokens,'accessToken'> | RequestError<'m
        process.env.REFRESH_TOKEN_SECRET as string,
        {expiresIn:'1d'})
      
-       res.cookie('jwt',refreshToken,{
+       res.cookie('jwt_refresh',refreshToken,{
          httpOnly:true,
-         
          maxAge:1000 * 60 * 60 * 24
       })
-       
+      
+      res.cookie('jwt_access',accessToken,{
+         maxAge:1000 * 45
+      })
 
-       res.json({ accessToken });
+       res.status(200).end();
 
 })
 
-app.post('/login',(req:Request<any,RequestBody | RequestError<VerifyErrors>,Pick<Tokens,'accessToken'>>,res) => {
+// app.post('/login',(req:Request<any,RequestBody | RequestError<VerifyErrors>,Pick<Tokens,'accessToken'>>,res) => {
 
      
      
       
-       // const accessToken = jwt.ve(
-       // {'name':f?.name},
-       // process.env.ACCESS_TOKEN_SECRET as string,
-       // {expiresIn:'30s'})
+//        // const accessToken = jwt.ve(
+//        // {'name':f?.name},
+//        // process.env.ACCESS_TOKEN_SECRET as string,
+//        // {expiresIn:'30s'})
         
-   console.log(req.cookies.jwt);
-       jwt.verify(req.body.accessToken,process.env.ACCESS_TOKEN_SECRET as string,(err,decode) => {
+//    console.log(req.cookies.jwt);
+//        jwt.verify(req.body.accessToken,process.env.ACCESS_TOKEN_SECRET as string,(err,decode) => {
              
-             if(err) return res.status(401).json({err});
+//              if(err) return res.status(401).json({err});
 
              
-            return res.status(200).json(decode as RequestBody);
+//             return res.status(200).json(decode as RequestBody);
 
-       })
+//        })
       
       
      
@@ -131,7 +133,7 @@ app.post('/login',(req:Request<any,RequestBody | RequestError<VerifyErrors>,Pick
 
       
 
-})
+// })
 
 app.get('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,any>,res:Response) => {
 
