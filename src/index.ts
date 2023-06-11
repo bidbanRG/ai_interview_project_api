@@ -92,15 +92,18 @@ app.post('/signup',(req:Request<any,Pick<Tokens,'accessToken'> | RequestError<'m
        const refreshToken = jwt.sign(
        f,
        process.env.REFRESH_TOKEN_SECRET as string,
-       {expiresIn:'1d'})
+       {expiresIn:'30d'})
      
-       res.cookie('jwt_refresh',refreshToken,{
+       res.cookie('jwt',refreshToken,{
          httpOnly:true,
-         maxAge:1000 * 60 * 60 * 24
+         secure:true,
+         maxAge:1000 * 60 * 60 * 24 * 30,
+
       })
       
       res.cookie('jwt_access',accessToken,{
-         maxAge:1000 * 45
+         maxAge:1000 * 45,
+         secure:true
       })
 
       return res.status(200).json({accessToken});
