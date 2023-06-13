@@ -99,10 +99,9 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', 
    { failureRedirect: '/login/failed',
-        
+     successRedirect:process.env.CLIENT_URL + '/interview'  
   }),(req,res) => {
      if(req.user){
-        
         
       const refreshToken = jwt.sign(
        req.user,
@@ -116,7 +115,7 @@ app.get(
          maxAge:1000 * 60 * 60 * 24,
          secure:true,
       })
-       return res.status(200).send('Succesfully login');
+       return res.redirect(301,process.env.CLIENT_URL + '/interview');
     }
   }
 );
@@ -236,6 +235,11 @@ app.get('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,
 
       
 
+})
+app.get('/clear',(_,res)=>{
+    
+    res.clearCookie('jwt');
+    res.status(201).send('you cookie cleared');
 })
 
 app.listen(5000,() => {
