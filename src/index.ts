@@ -42,7 +42,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET_ID,
-      callbackURL: '/auth/google/callback',
+      callbackURL: 'https://ai-interview-project-api.vercel.app/auth/google/callback',
     },
     (accessToken:any, refreshToken:any, profile:any, done:any) => {
       // This callback function is called after successful authentication
