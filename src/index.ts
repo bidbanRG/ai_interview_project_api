@@ -243,7 +243,7 @@ app.get('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,
 })
 
 app.listen(5000,() => {
-   console.log('listening at PORT 3000');
+   console.log('listening at PORT 3000',process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_CLIENT_SECRET_ID);
 })
 
 export default app;
