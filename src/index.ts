@@ -99,7 +99,28 @@ app.get(
   passport.authenticate('google', 
    { failureRedirect: '/login/failed',
       successRedirect: process.env.CLIENT_URL + '/interview'  
-  }),
+  }),(req,res) => {
+     if(req.user){
+        
+        
+      const refreshToken = jwt.sign(
+       req.user,
+       process.env.REFRESH_TOKEN_SECRET as string,
+       {expiresIn:'30s'})
+       
+       
+
+       res.cookie('jwt',refreshToken,{
+         httpOnly:true,
+         maxAge:1000 * 30,
+         secure:process.env.NODE_ENV === 'production',
+      })
+       return res.status(200).json({
+          success:true,
+          user:req.user,
+       })
+    }
+  }
 );
 
 
