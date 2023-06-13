@@ -30,7 +30,7 @@ app.use(session({
    resave:false,
    saveUninitialized:true,
    cookie:{
-      secure:process.env.NODE_ENV === 'production',
+      secure:true,
   },
 }))
 app.use(cookieParser());
@@ -113,7 +113,7 @@ app.get(
        res.cookie('jwt',refreshToken,{
          httpOnly:true,
          maxAge:1000 * 30,
-         secure:process.env.NODE_ENV === 'production',
+         secure:true,
       })
        return res.status(200).json({
           success:true,
