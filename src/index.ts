@@ -99,7 +99,7 @@ app.get(
   '/auth/google/callback',
   passport.authenticate('google', 
    { failureRedirect: '/login/failed',
-      successRedirect: process.env.CLIENT_URL + '/interview'  
+        
   }),(req,res) => {
      if(req.user){
         
