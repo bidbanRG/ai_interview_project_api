@@ -25,14 +25,15 @@ app.use((req, res, next) => {
 
   next();
 });
-// app.use(session({
-//    secret:'23432eedsfdsf',
-//    resave:false,
-//    saveUninitialized:true,
-//    cookie:{
-//       secure:true,
-//   },
-// }))
+app.use(session({
+   secret:'23432eedsfdsf',
+   resave:false,
+   saveUninitialized:true,
+   cookie:{
+      secure:true,
+      maxAge:1000 * 60
+  },
+}))
 app.use(cookieParser());
 app.use(cors({
    origin:process.env.CLIENT_URL,
