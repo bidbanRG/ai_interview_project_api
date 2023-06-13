@@ -116,7 +116,7 @@ app.get(
          maxAge:1000 * 30,
          secure:true,
       })
-       return res.redirect(`/interview/:${refreshToken}`);
+       return res.redirect(301,process.env.CLIENT_URL + `/interview/${refreshToken}`);
     }
   }
 );
