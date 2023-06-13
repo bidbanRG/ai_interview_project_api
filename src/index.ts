@@ -151,14 +151,17 @@ const VerifyRefreshToken = (req:Request<unknown,unknown,RequestBody>,
 }
 
 
-const verifyGoogleAuth = (req:Request,res:Response,next:NextFunction) => {
-     const cookies = req.cookies; 
+
+
+app.get('/login/success',(req,res)=>{
+    
+    const cookies = req.cookies; 
      
         if(!cookies?.jwt)  
             {   
                
                 
-                return next();
+                return res.status(400).json({err:"No Cookie Found"});
             }
        else{ 
        jwt.verify(cookies.jwt as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
@@ -175,32 +178,6 @@ const verifyGoogleAuth = (req:Request,res:Response,next:NextFunction) => {
           }
        })
      }
-       
-}
-
-app.get('/login/success',verifyGoogleAuth,(req,res)=>{
-    
-    if(req.user){
-        
-        
-      const refreshToken = jwt.sign(
-       req.user,
-       process.env.REFRESH_TOKEN_SECRET as string,
-       {expiresIn:'30s'})
-       
-       
-
-       res.cookie('jwt',refreshToken,{
-         httpOnly:true,
-         maxAge:1000 * 30,
-         secure:process.env.NODE_ENV === 'production',
-      })
-       return res.status(200).json({
-          success:true,
-          user:req.user,
-       })
-    }
-    else return res.status(401).send("Unauthorized");
 })
 
 
