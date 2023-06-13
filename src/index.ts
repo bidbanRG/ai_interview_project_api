@@ -43,7 +43,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET_ID,
-      callbackURL: 'https://ai-interview-project-api.vercel.app/auth/google/callback',
+      callbackURL: '/auth/google/callback',
     },
     (accessToken:any, refreshToken:any, profile:any, done:any) => {
       // This callback function is called after successful authentication
@@ -160,7 +160,7 @@ app.get('/login/success',(req,res)=>{
             {   
                
                 
-                return res.status(400).json({err:"No Cookie Found"});
+                return res.status(401).json({err:"No Cookie Found"});
             }
        else{ 
        jwt.verify(cookies.jwt as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
