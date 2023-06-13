@@ -116,10 +116,7 @@ app.get(
          maxAge:1000 * 30,
          secure:true,
       })
-       return res.status(200).json({
-          success:true,
-          user:req.user,
-       })
+       return res.redirect(`/interview/:${refreshToken}`);
     }
   }
 );
