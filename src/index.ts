@@ -113,7 +113,7 @@ app.get(
        res.cookie('jwt',refreshToken,{
          httpOnly:true,
          maxAge:1000 * 60 * 60 * 24,
-        
+         secure:true,
       })
        return res.redirect(301,process.env.CLIENT_URL + '/interview');
     }
@@ -149,21 +149,23 @@ const VerifyRefreshToken = (req:Request<unknown,unknown,RequestBody>,
       
 }
 
-
-
-
-app.get('/login/success',(req,res)=>{
+const verifyCookie = (req:Request,res:Response,next:NextFunction) => {
     
-    const cookies = req.cookies; 
+    if(!req.cookies?.jwt)
+     {
+        return res.status(401).json({err:"No Cookie Found"});
+    }else return next();
+
+}
+
+
+app.get('/login/success',verifyCookie,(req,res)=>{
+    
+    const token:string = req.cookies.jwt; 
      
-        if(!cookies?.jwt)  
-            {   
-               
-                
-                return res.status(401).json({err:"No Cookie Found"});
-            }
-       else{ 
-       jwt.verify(cookies.jwt as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
+        
+       
+       jwt.verify(token,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
              
              if(err) {
                
@@ -176,7 +178,7 @@ app.get('/login/success',(req,res)=>{
              })
           }
        })
-     }
+     
 })
 
 
