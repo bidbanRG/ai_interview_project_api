@@ -4,35 +4,57 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt, { VerifyErrors } from 'jsonwebtoken';
-
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth2').Strategy;
+const session = require('express-session');
 dotenv.config();
 const app = express();
 app.use(express.json());
+app.use((req, res, next) => {
+  // Set the allowed origin(s)
+  res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL + `${req.baseUrl}`);
+
+  // Allow the credentials to be sent
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Set the allowed methods
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+
+  // Set the allowed headers
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  next();
+});
+app.use(session({
+   secret:'23432eedsfdsf',
+   resave:false,
+   saveUninitialized:true,
+   cookie:{
+      secure:process.env.NODE_ENV === 'production',
+  },
+}))
 app.use(cookieParser());
-app.use(cors());
-// app.use('/',function(req, res, next) { //allow cross origin requests
-
-   
-    
-//     res.setHeader('Access-Control-Allow-Origin', `http://localhost:5173/${req.baseUrl}`);
-
-//     // Request methods you wish to allow
-//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-//     // Request headers you wish to allow
-//     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-//     // Set to true if you need the website to include cookies in the requests sent
-//     // to the API (e.g. in case you use sessions)
-//    // res.setHeader('Access-Control-Allow-Credentials', true);
-//     next();
-// });
-
-
-
-app.get('/',(req,res) => {
-   res.send('Hello Deploy Succesfull');
-})
+app.use(cors({
+   origin:process.env.CLIENT_URL,
+  }));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET_ID,
+      callbackURL: '/auth/google/callback',
+    },
+    (accessToken:any, refreshToken:any, profile:any, done:any) => {
+      // This callback function is called after successful authentication
+      // You can perform any necessary user data handling here
+      // For example, create a new user in your database or retrieve an existing user
+      // Then call the done() function to proceed with the authentication process
+      done(null, profile);
+    }
+  )
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 type RequestBody = {
@@ -51,14 +73,49 @@ type Tokens = {
 }
 
 
+
+
+app.get('/',(req,res) => {
+   res.send('Hello Deploy Succesfull');
+})
+
+passport.serializeUser((user:any, done:any) => {
+  done(null, user);
+});
+passport.deserializeUser((user:any, done:any) => {
+  // Find the user by ID in your database or data source
+    
+    done(null, user);
+
+});
+// Routes
+app.get(
+  '/auth/google',
+  passport.authenticate('google', { scope: ['profile',"email"] })
+);
+
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', 
+   { failureRedirect: '/login/failed',
+      successRedirect: process.env.CLIENT_URL + '/interview'  
+  }),
+);
+
+
+
+
+
+
+
 const VerifyRefreshToken = (req:Request<unknown,unknown,RequestBody>,
                       res:Response<RequestError<'No Cookie Found' | "missing some payload" | VerifyErrors>>,next:NextFunction) => {
        
 
         const cookies = req.cookies;  
-        if(!cookies?.jwt_refresh) return res.json({err:'No Cookie Found'});
+        if(!cookies?.jwt) return res.json({err:'No Cookie Found'});
         
-       jwt.verify(cookies.jwt_refresh as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
+       jwt.verify(cookies.jwt as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
              
              if(err) return res.status(401).json({err});
              
@@ -75,7 +132,68 @@ const VerifyRefreshToken = (req:Request<unknown,unknown,RequestBody>,
 }
 
 
-app.post('/signup',(req:Request<any,Pick<Tokens,'accessToken'> | RequestError<'missing some payload'>,RequestBody>,res) => {
+const verifyGoogleAuth = (req:Request,res:Response,next:NextFunction) => {
+     const cookies = req.cookies; 
+     
+        if(!cookies?.jwt)  
+            {   
+               
+                
+                return next();
+            }
+       else{ 
+       jwt.verify(cookies.jwt as string,process.env.REFRESH_TOKEN_SECRET as string, (err,decode) => {
+             
+             if(err) {
+               
+                return res.status(401).json({err});
+            }else{
+             
+              return res.status(200).json({
+                  success:true,
+                 user:decode,
+             })
+          }
+       })
+     }
+       
+}
+
+app.get('/login/success',verifyGoogleAuth,(req,res)=>{
+    
+    if(req.user){
+        
+        
+      const refreshToken = jwt.sign(
+       req.user,
+       process.env.REFRESH_TOKEN_SECRET as string,
+       {expiresIn:'30s'})
+       
+       
+
+       res.cookie('jwt',refreshToken,{
+         httpOnly:true,
+         maxAge:1000 * 30,
+         secure:process.env.NODE_ENV === 'production',
+      })
+       return res.status(200).json({
+          success:true,
+          user:req.user,
+       })
+    }
+    else return res.status(401).send("Unauthorized");
+})
+
+
+
+app.get('/login/failed',(req,res)=>{
+    
+    res.send('Login Failed');
+})
+
+
+
+app.post('/signup',(req:Request<any,"Succesfull"| RequestError<'missing some payload'>,RequestBody>,res) => {
 
      
    const f = req.body;     
@@ -84,59 +202,27 @@ app.post('/signup',(req:Request<any,Pick<Tokens,'accessToken'> | RequestError<'m
     
     
       
-       const accessToken = jwt.sign(
-       f,
-       process.env.ACCESS_TOKEN_SECRET as string,
-       {expiresIn:'45s'})
+     
       
        const refreshToken = jwt.sign(
        f,
        process.env.REFRESH_TOKEN_SECRET as string,
        {expiresIn:'30d'})
-     
+       
+
        res.cookie('jwt',refreshToken,{
          httpOnly:true,
-         secure:true,
          maxAge:1000 * 60 * 60 * 24 * 30,
-
+         secure:true,
       })
       
-      res.cookie('jwt_access',accessToken,{
-         maxAge:1000 * 45,
-         secure:true
-      })
+      
 
-      return res.status(200).json({accessToken});
+      return res.send('Succesfull');
 
 })
 
-// app.post('/login',(req:Request<any,RequestBody | RequestError<VerifyErrors>,Pick<Tokens,'accessToken'>>,res) => {
 
-     
-     
-      
-//        // const accessToken = jwt.ve(
-//        // {'name':f?.name},
-//        // process.env.ACCESS_TOKEN_SECRET as string,
-//        // {expiresIn:'30s'})
-        
-//    console.log(req.cookies.jwt);
-//        jwt.verify(req.body.accessToken,process.env.ACCESS_TOKEN_SECRET as string,(err,decode) => {
-             
-//              if(err) return res.status(401).json({err});
-
-             
-//             return res.status(200).json(decode as RequestBody);
-
-//        })
-      
-      
-     
-      
-
-      
-
-// })
 
 app.get('/token',VerifyRefreshToken,(req:Request<any,Pick<Tokens,'accessToken'>,any>,res:Response) => {
 
