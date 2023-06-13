@@ -116,7 +116,7 @@ app.get(
          maxAge:1000 * 60 * 60 * 24,
          secure:true,
       })
-       return res.redirect(301,process.env.CLIENT_URL + `/interview`);
+       return res.status(200).send('Succesfully login');
     }
   }
 );
